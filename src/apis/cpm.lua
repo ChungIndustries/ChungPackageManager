@@ -1,4 +1,5 @@
-local sources_path = ".cpm/sources.json"
+local cpm_root_path = ".cpm"
+local sources_path = cpm_root_path.."/sources.json"
 
 
 ---------------- UTILS ----------------
@@ -105,14 +106,17 @@ function add_source(source_path)
 end
 
 
-local function get_package_url_from_source(source, package_name)
-  local packages
-
+local function get_packages_from_source(source)
   if is_url(source) then
-    packages = json.decode(http.get(source).readAll())
+    return json.decode(http.get(source).readAll())
   else
-    packages = json.decode(read_file(source))
+    return json.decode(read_file(source))
   end
+end
+
+
+local function get_package_url_from_source(source, package_name)
+  local packages = get_packages_from_source(source)
 
   for _, package in ipairs(packages) do
     if package.name == package_name then
