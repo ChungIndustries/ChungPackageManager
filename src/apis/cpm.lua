@@ -106,7 +106,7 @@ end
 
 
 local function get_package_url_from_source(source, package_name)
-  local packages = {}
+  local packages
 
   if is_url(source) then
     packages = json.decode(http.get(source).readAll())
