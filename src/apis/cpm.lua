@@ -160,6 +160,7 @@ local function get_program_alias(program_path)
   end
 end
 
+
 local function load_program(program_path)
   local program_file = program_path.."/main.lua"
   assert(fs.exists(program_file), "Invalid program structure! Missing: "..program_file)
@@ -170,6 +171,7 @@ local function load_program(program_path)
   shell.setAlias(program_name, program_file)
   io.write("done!\n")
 end
+
 
 local function load_programs(programs_path)
   for _, program in pairs(fs.list(programs_path)) do
@@ -225,11 +227,11 @@ end
 
 
 function get_installed_packages()
-  if not fs.exists(installed_packages_path) then
+  if not fs.exists(packages_path) then
     return {}
   end
 
-  return json.decode(read_file(installed_packages_path))
+  return json.decode(read_file(packages_path))
 end
 
 
