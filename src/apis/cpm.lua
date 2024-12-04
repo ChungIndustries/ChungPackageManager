@@ -1,6 +1,7 @@
 local cpm_root_path = ".cpm"
 local sources_path = cpm_root_path.."/sources.json"
-
+local packages_path = cpm_root_path.."/packages.json"
+local installed_packages_path = cpm_root_path.."/installed_packages"
 
 ---------------- UTILS ----------------
 
@@ -223,12 +224,40 @@ function build(package_path)
 end
 
 
-local function install_local_package(package_path, local_path)
-  local install_path = local_path.."/"..fs.getName(package_path)
+function get_installed_packages()
+  if not fs.exists(installed_packages_path) then
+    return {}
+  end
+
+  return json.decode(read_file(installed_packages_path))
+end
+
+
+local function write_installed_packages(installed_packages)
+  write_file(installed_packages_path, json.encode(installed_packages))
+end
+
+
+local function has_installed_package(package_name)
+  local installed_packages = get_installed_packages()
+  return installed_packages[package_name] ~= nil
+end
+
+
+local function add_install_path(package_name, install_path)
+  local installed_packages = get_installed_packages()
+  installed_packages[package_name] = install_path
+  write_installed_packages(installed_packages)
+end
+
+
+local function install_local_package(package_name, package_path, local_path)
+  local install_path = local_path.."/"..package_name
   fs.move(package_path, install_path)
 
   print("Installing package "..install_path.."...")
 
+  add_install_path(package_name, install_path)
   build(install_path)
   load(install_path)
 
@@ -238,7 +267,7 @@ end
 
 local function install_from_url(package_name, package_url, local_path)
   github.download(package_url, local_path)
-  install_local_package(local_path.."/"..package_name, local_path)
+  install_local_package(package_name, local_path.."/"..package_name, local_path)
 end
 
 
@@ -258,13 +287,36 @@ local function install_from_sources(package_name, local_path)
 end
 
 
+local function uninstall_package(package_name)
+  local installed_packages = get_installed_packages()
+  local install_path = installed_packages[package_name]
+
+  fs.delete(install_path)
+  installed_packages[package_name] = nil
+  write_installed_packages(installed_packages)
+end
+
+
+function uninstall(package_name)
+  if not has_installed_package(package_name) then
+    error("Package "..package_name.." not installed!")
+  end
+
+  print("Uninstalling package "..package_name.."...")
+
+  uninstall_package(package_name)
+
+  print("Uninstallation complete!")
+end
+
+
 function install(package_path, local_path)
-  local_path = local_path or ""
+  local_path = local_path or installed_packages_path
 
   if is_url(package_path) then
     install_from_url(package_path, local_path)
   elseif is_local_package(package_path) then
-    install_local_package(package_path, local_path)
+    install_local_package(fs.getName(package_path), package_path, local_path)
   else
     install_from_sources(package_path, local_path)
   end
