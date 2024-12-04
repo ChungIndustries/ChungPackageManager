@@ -283,7 +283,7 @@ local function install_from_sources(package_name, local_path)
     end
   end
 
-  error("Package not found in sources!")
+  error("Package "..package_name.." found in sources!")
 end
 
 
